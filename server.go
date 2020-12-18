@@ -58,6 +58,7 @@ func listHandler(w http.ResponseWriter, r *http.Request, svc *s3.S3) {
         for _, b := range result.Buckets {
             fmt.Fprintf(w, "<a href=\"/browse/%s/\">%s</a>\t\t%s<br />\n", *b.Name, *b.Name, b.CreationDate)
         }
+        fmt.Fprintf(w, "</body></html>\n")
     } else if strings.HasSuffix(r.URL.Path, "/") {
         fmt.Fprintf(w, "<html><body>\n")
         fmt.Fprintf(w, "<p>Contents of %q</p>\n", strings.SplitN(r.URL.Path[1:], "/", 2))
@@ -87,6 +88,7 @@ func listHandler(w http.ResponseWriter, r *http.Request, svc *s3.S3) {
             return
         }
 
+        fmt.Fprintf(w, "</body></html>\n")
     } else {
         fmt.Println("GET %s", paths[1])
         downloader := s3manager.NewDownloaderWithClient(svc)
@@ -102,14 +104,19 @@ func listHandler(w http.ResponseWriter, r *http.Request, svc *s3.S3) {
         }
 
     }
-    fmt.Fprintf(w, "</body></html>\n")
 }
 
 func searchHandler(w http.ResponseWriter, r *http.Request, svc *s3.S3) {
 
     paths := strings.SplitN(r.URL.Path[1:], "/", 3)
-    bucket := paths[1]
-    query := strings.Join(paths[2:], "/")
+    bucket := r.URL.Query()["bucket"][0]
+    if bucket == "" {
+        bucket = paths[1]
+    }
+    query := r.URL.Query()["query"][0]
+    if query == "" {
+        query = strings.Join(paths[2:], "/")
+    }
     fmt.Println(query)
 
     fmt.Fprintf(w, "<html><body>\n")
@@ -133,6 +140,19 @@ func searchHandler(w http.ResponseWriter, r *http.Request, svc *s3.S3) {
     fmt.Fprintf(w, "</body></html>\n")
 }
 
+func rootHandler(w http.ResponseWriter, r *http.Request) {
+
+    fmt.Fprintf(w, "<html><body>\n")
+    fmt.Fprintf(w, "<form action=\"/search\" method=\"get\">\n")
+    fmt.Fprintf(w, "<ul><li><label for=\"bucket\">Bucket:</label><input type=\"text\" id=\"bucket\" name=\"bucket\"></li>")
+    fmt.Fprintf(w, "<li><label for=\"query\">Query:</label><input type=\"text\" id=\"query\" name=\"query\"></li></ul>")
+    fmt.Fprintf(w, "<li class=\"button\"><button type=\"submit\">Send your message</button></li></ul>")
+    fmt.Fprintf(w, "</form>\n")
+    fmt.Fprintf(w, "<hr>\n")
+    fmt.Fprintf(w, "Or just <a href=\"/browse/\">Browse</a> buckets and objects<br />\n")
+    fmt.Fprintf(w, "</body></html>\n")
+}
+
 func main() {
 
     endpoint := os.Getenv("S3ENDPOINT")
@@ -146,6 +166,7 @@ func main() {
     sess := session.Must(session.NewSession(s3Config))
     svc := s3.New(sess)
 
+    http.HandleFunc("/", rootHandler)
     http.HandleFunc("/favicon.ico", faviconHandler)
     http.HandleFunc("/browse/", func(w http.ResponseWriter, r *http.Request) { listHandler(w, r, svc) })
     http.HandleFunc("/search/", func(w http.ResponseWriter, r *http.Request) { searchHandler(w, r, svc) })
