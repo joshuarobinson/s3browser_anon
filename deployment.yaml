@@ -1,0 +1,51 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: anons3
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: anons3
+  template:
+    metadata:
+      labels:
+        app: anons3
+    spec:
+      containers:
+      - name: anons3
+        image: joshuarobinson/anons3
+        imagePullPolicy: Always
+        ports:
+        - containerPort: 8080
+          name: ui-port
+        env:
+        - name: S3ENDPOINT
+          value: "http://10.62.64.200"
+        - name: AWS_ACCESS_KEY_ID
+          valueFrom:
+            secretKeyRef:
+              name: my-s3-keys
+              key: access-key
+        - name: AWS_SECRET_ACCESS_KEY
+          valueFrom:
+            secretKeyRef:
+              name: my-s3-keys
+              key: secret-key
+        resources:
+          requests:
+            memory: 256Mi
+            cpu: 1
+          limits:
+            memory: 2Gi
+            cpu: 2
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: anons3
+spec:
+  ports:
+  - port: 8080
+  selector:
+    app: anons3
