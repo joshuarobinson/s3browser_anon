@@ -146,10 +146,8 @@ func rootHandler(w http.ResponseWriter, r *http.Request) {
     fmt.Fprintf(w, "<form action=\"/search\" method=\"get\">\n")
     fmt.Fprintf(w, "<ul><li><label for=\"bucket\">Bucket:</label><input type=\"text\" id=\"bucket\" name=\"bucket\"></li>")
     fmt.Fprintf(w, "<li><label for=\"query\">Query:</label><input type=\"text\" id=\"query\" name=\"query\"></li></ul>")
-    fmt.Fprintf(w, "<li class=\"button\"><button type=\"submit\">Send your message</button></li></ul>")
-    fmt.Fprintf(w, "</form>\n")
-    fmt.Fprintf(w, "<hr>\n")
-    fmt.Fprintf(w, "Or just <a href=\"/browse/\">Browse</a> buckets and objects<br />\n")
+    fmt.Fprintf(w, "<li class=\"button\"><button type=\"submit\">Send your message</button></form>\n")
+    fmt.Fprintf(w, "<hr>\nOr just <a href=\"/browse/\">Browse</a> buckets and objects<br />\n")
     fmt.Fprintf(w, "</body></html>\n")
 }
 
