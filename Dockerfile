@@ -1,6 +1,4 @@
-## We specify the base image we need for our
-## go application
-FROM golang:1.15.2-alpine3.12 AS builder
+FROM golang:1.15.6-alpine3.12 AS builder
 
 RUN apk add build-base git musl-dev
 
@@ -17,6 +15,10 @@ WORKDIR /app
 
 ## we run go build to compile the binary executable of our Go program
 RUN go build -tags musl -o main .
+
+FROM golang:1.15.6-alpine3.12
+COPY --from=builder /app/favicon.ico /app/favicon.ico
+COPY --from=builder /app/main /app/main
 
 ## Our start command which kicks off our newly created binary executable
 CMD ["/app/main"]
