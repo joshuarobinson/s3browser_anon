@@ -36,9 +36,8 @@ func listHandler(w http.ResponseWriter, r *http.Request, svc *s3.S3) {
 
     if paths[0] == "" {
         fmt.Fprintf(w, "<html><body>\n")
-        fmt.Println(r.URL.Path[1:])
+        fmt.Printf("%s - Listing buckets...\n", r.URL.Path[1:])
         fmt.Fprintf(w, "<p>Contents of %q</p>\n", strings.SplitN(r.URL.Path[1:], "/", 2))
-        fmt.Println("Listing buckets...")
         input := &s3.ListBucketsInput{}
 
         result, err := svc.ListBuckets(input)
@@ -62,12 +61,13 @@ func listHandler(w http.ResponseWriter, r *http.Request, svc *s3.S3) {
     } else if strings.HasSuffix(r.URL.Path, "/") {
         fmt.Fprintf(w, "<html><body>\n")
         fmt.Fprintf(w, "<p>Contents of %q</p>\n", strings.SplitN(r.URL.Path[1:], "/", 2))
-        fmt.Println(paths)
+
         delim := "/"
         pfx := ""
         if len(paths) > 1 {
             pfx = paths[1]
         }
+        fmt.Printf("Listing in bucket %s, prefix: %s\n", &paths[0], pfx)
 
         fmt.Fprintf(w, "<a href=\"..\">../</a><br />\n")
         err := svc.ListObjectsV2Pages(&s3.ListObjectsV2Input{
@@ -102,7 +102,6 @@ func listHandler(w http.ResponseWriter, r *http.Request, svc *s3.S3) {
         if err != nil {
             fmt.Println("Unable to download item %q, %v", paths, err)
         }
-
     }
 }
 
@@ -146,7 +145,7 @@ func rootHandler(w http.ResponseWriter, r *http.Request) {
     fmt.Fprintf(w, "<form action=\"/search\" method=\"get\">\n")
     fmt.Fprintf(w, "<ul><li><label for=\"bucket\">Bucket:</label><input type=\"text\" id=\"bucket\" name=\"bucket\"></li>")
     fmt.Fprintf(w, "<li><label for=\"query\">Query:</label><input type=\"text\" id=\"query\" name=\"query\"></li></ul>")
-    fmt.Fprintf(w, "<li class=\"button\"><button type=\"submit\">Send your message</button></form>\n")
+    fmt.Fprintf(w, "<li class=\"button\"><button type=\"submit\">Search for Prefix</button></form>\n")
     fmt.Fprintf(w, "<hr>\nOr just <a href=\"/browse/\">Browse</a> buckets and objects<br />\n")
     fmt.Fprintf(w, "</body></html>\n")
 }
